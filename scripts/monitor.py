@@ -21,6 +21,7 @@ Examples:
   python3 monitor.py bookorbit_loadtest --label "Bookorbit v1.4.0" --books 150K --db-container bookorbit_db_loadtest
   python3 monitor.py kavita_loadtest --label "Kavita v0.9.0.2" --books 100K --interval 2
   python3 monitor.py komga_loadtest --label "Komga v1.24.4" --books 50K --idle-threshold 3
+  python3 monitor.py tome_loadtest --label "Tome v1.3.2" --books 50K
 
 Requires:  pip install rich   (gracefully falls back to plain text if missing)
 """
@@ -510,6 +511,9 @@ def main() -> None:
             "  python3 monitor.py bookorbit_loadtest --label \"Bookorbit v1.4.0\" --books 150K --db-container bookorbit_db_loadtest\n"
             "  python3 monitor.py kavita_loadtest --label \"Kavita v0.9.0.2\" --books 100K --interval 2\n"
             "  python3 monitor.py komga_loadtest --label \"Komga v1.24.4\" --books 50K --idle-threshold 3\n"
+            "  python3 monitor.py tome_loadtest --label \"Tome v1.3.2\" --books 50K\n"
+            "\n"
+            "Requires: pip install rich (gracefully falls back to plain text if missing)\n"
         ),
     )
     parser.add_argument("container",         help="Docker container name to monitor")

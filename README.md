@@ -47,6 +47,10 @@ For the full raw data tables (Ingestion Time, Throughput, Idle RAM, Peak RAM, an
 
 **Stump** has the lowest RAM footprint at 10K (209 MB idle, 243 MB peak) and is fast at that scale (3:08). Beyond 50K it collapses: 100K takes 1h 51m and idle RAM hits 1.16 GB. Only viable for small libraries.
 
+**Audiobookshelf** shines in RAM efficiency for smaller libraries, using a highly impressive 125 MB idle at 10K. Ingestion speed is moderate initially (5 minutes for 10K) but degrades significantly at extreme scales, taking nearly 5 hours for 150K. A great choice for its audio features if your ebook library size is modest.
+
+**Tome** performs reasonably well at 10K (4:28) and maintains a low 190 MB idle RAM footprint. However, it struggles severely with large datasets: 100K books takes over 6 hours to ingest, and idle RAM climbs to 1.47 GB. Best suited for smaller collections.
+
 **Grimmory** uses significantly more RAM than the others - 2.45 GB peak at 10K, rising to 4.91 GB at 150K (including MariaDB). This is 5-9x more peak RAM than Kavita. Ingestion is slower than Bookorbit and Kavita at all tested sizes, and throughput degrades at scale. On resource-constrained hardware this is a hard blocker. On capable hardware (8+ GB available), resource usage is less of a concern and Grimmory may offer features or a UI that suit some users better - this benchmark does not evaluate that.
 
 **Komga** (JVM) has a hard floor around 1.16 GB RAM even for 10K books. Ingestion of 10K takes 12 minutes (14 bk/s). At 50K it ran for over 1h 51m without finishing. On a resource-constrained machine this rules it out. Komga is widely used for comics/manga and has a mature feature set and active community - if features matter more than ingestion performance and you have enough RAM, it remains a legitimate choice.
@@ -61,7 +65,9 @@ For the full raw data tables (Ingestion Time, Throughput, Idle RAM, Peak RAM, an
 
 **Bookorbit** for libraries over ~100K, or when ingestion speed is the priority. At 100K and 150K it has lower idle RAM than every other app (472 MB and 524 MB respectively). Throughput scales up with library size so large imports finish faster. It requires a PostgreSQL sidecar, which adds complexity and ~160 MB of footprint - at 10K and 50K that overhead means Bookorbit is marginally heavier than Kavita, so for smaller libraries Kavita is the leaner single-container pick.
 
-**Stump** is marginally lighter at 10K (209 MB vs 285 MB) and is a simpler single-container setup. Fine for small, stable libraries that won't grow past ~20K. Avoid it at 100K+ (idle RAM hits 1.16 GB).
+**Audiobookshelf** and **Tome** are incredibly light at 10K (125 MB and 190 MB idle respectively), making them excellent single-container choices for very small libraries. Avoid both at 50K+, as their RAM footprints swell rapidly.
+
+**Stump** is also very light at 10K (209 MB) and is a simpler single-container setup. Fine for small, stable libraries that won't grow past ~20K. Avoid it at 100K+ (idle RAM hits 1.16 GB).
 
 **Kavita** is the lightest single-container option for libraries up to ~100K. At 100K it uses only 336 MB idle - less than Bookorbit's 472 MB (which includes PostgreSQL). At 10K and 50K it is also light (315/437 MB), though Bookorbit edges it out slightly there. At 150K Kavita's idle RAM jumps to 1.02 GB, so for libraries that size Bookorbit becomes the better fit on constrained hardware.
 
@@ -117,6 +123,8 @@ Peak RAM required during ingestion (app + DB, rounded up). **Min CPUs** is based
 | Stump | 2 | 250 MB | 450 MB | 1.2 GB | - |
 | Kavita | 2 | 350 MB | 450 MB | 550 MB | 1.1 GB |
 | Bookorbit | 2 | 450 MB | 700 MB | 800 MB | 850 MB |
+| Audiobookshelf | 2 | 300 MB | 850 MB | 1.5 GB | 2.2 GB |
+| Tome | 2 | 250 MB | 1.2 GB | 1.6 GB | - |
 | Komga | 3 | 1.2 GB | 2.6 GB | - | - |
 | Grimmory | 4 | 2.5 GB | 3.1 GB | 4.0 GB | 5.0 GB |
 | Calibre-Web-Automated | 3 | n/a | - | - | - |
@@ -131,11 +139,13 @@ After ingestion, Bookorbit and Kavita release a significant portion of that RAM 
 |-----------|-------------------|------------------------|-------------------|
 | Bookorbit | Yes (all sizes)   | At 50K and 150K        | 150K+ (scales well) |
 | Kavita    | Second (close)    | At 10K-100K            | 150K (RAM grows at 150K) |
-| Stump     | At 10K only       | At 10K only            | ~20K (degrades beyond) |
+| Audiobookshelf | No | At 10K only (125 MB) | ~50K (slows down drastically beyond) |
+| Tome      | No                | At 10K only (190 MB)   | ~10K (degrades sharply beyond) |
+| Stump     | At 10K only       | No                     | ~20K (degrades beyond) |
 | Grimmory  | No                | No                     | Resource-heavy; evaluate on features if hardware allows |
 | Komga     | No                | No                     | Mature comic/manga app; evaluate on features if RAM allows |
 
-Bookorbit wins on raw ingestion speed at every size. Kavita wins on RAM efficiency at small-to-mid scale and requires no database sidecar. For most users with libraries under 100K books, Kavita is a strong pick on performance grounds; Bookorbit becomes the clearer choice above 100K or when ingestion speed is the priority. Grimmory, Komga, and Calibre-Web-Automated may offer features, UIs, or ecosystem integrations that outweigh their performance numbers for the right user - this benchmark cannot speak to that.
+Bookorbit wins on raw ingestion speed at every size. Kavita wins on RAM efficiency at small-to-mid scale and requires no database sidecar. For most users with libraries under 100K books, Kavita is a strong pick on performance grounds; Bookorbit becomes the clearer choice above 100K or when ingestion speed is the priority. Audiobookshelf and Tome are highly efficient for small libraries (~10K) but their speed and RAM footprint degrade sharply beyond that. Grimmory, Komga, and Calibre-Web-Automated may offer features, UIs, or ecosystem integrations that outweigh their performance numbers for the right user - this benchmark cannot speak to that.
 
 ## Running Your Own Benchmark
 
@@ -188,7 +198,7 @@ Keep things fair: **stop all other app containers before starting the one you ar
 # Example: benchmark Kavita with 10K books
 
 # 0. Stop only benchmark stacks (safe: does not touch unrelated containers)
-for app in bookorbit grimmory kavita komga stump calibre-web-automated; do
+for app in bookorbit grimmory kavita komga stump calibre-web-automated tome audiobookshelf; do
   docker compose -f "docker/$app/docker-compose.yml" down -v --remove-orphans 2>/dev/null || true
 done
 
@@ -257,6 +267,14 @@ python3 monitor.py calibre_web_automated_loadtest \
 python3 monitor.py bookorbit_loadtest \
   --label "Bookorbit v1.4.0" --books 10K \
   --db-container bookorbit_db_loadtest
+
+# Tome
+python3 monitor.py tome_loadtest \
+  --label "Tome v1.3.2" --books 10K
+
+# Audiobookshelf
+python3 monitor.py audiobookshelf_loadtest \
+  --label "Audiobookshelf v2.35.1" --books 10K
 ```
 
 ### Step 4 - Generate the comparison dashboard

@@ -1,0 +1,12 @@
+services:
+  tome:
+    image: ghcr.io/bndct-devops/tome:1.0.0
+    container_name: tome_loadtest
+    restart: unless-stopped
+    ports:
+      - "6065:8080"
+    volumes:
+      - ./data:/data
+      - ../../books:/books:ro
+    environment:
+      - TZ=Etc/UTC

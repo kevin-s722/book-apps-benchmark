@@ -1,0 +1,24 @@
+# Generated EPUB books - not committed to git
+books/*
+!books/.gitkeep
+
+# User benchmark results - not committed to git (reference/ has the pre-run data)
+results/*
+!results/.gitkeep
+
+# Bookorbit secrets file
+docker/bookorbit/.env
+
+# Per-app data directories created by Docker
+docker/*/data/
+docker/*/config/
+docker/*/metadata/
+docker/*/bookdrop/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store

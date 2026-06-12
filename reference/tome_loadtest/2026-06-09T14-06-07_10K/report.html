@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Benchmark: Tome v1.3.2 - 10K books</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box}
+    body{font-family:system-ui,sans-serif;background:#0d1117;color:#e6edf3;margin:0;padding:2rem}
+    h1{color:#58a6ff;font-size:1.5rem;margin:0 0 .25rem}
+    .meta{color:#8b949e;font-size:.85rem;margin-bottom:2rem}
+    code{background:#161b22;padding:.15em .4em;border-radius:4px;font-size:.9em}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:2rem}
+    .card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:1rem}
+    .card.idle{border-color:#388bfd44}
+    .lbl{font-size:.7rem;color:#8b949e;text-transform:uppercase;letter-spacing:.06em}
+    .val{font-size:1.4rem;font-weight:700;color:#58a6ff;margin:.25rem 0 .1rem}
+    .val.idle{color:#388bfd}
+    .sub{font-size:.75rem;color:#6e7681}
+    .charts{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem}
+    .cb{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:1.25rem}
+    .cb h3{margin:0 0 1rem;font-size:.9rem;color:#c9d1d9}
+    canvas{max-height:260px}
+    table{width:100%;border-collapse:collapse;background:#161b22;border:1px solid #30363d;border-radius:8px;overflow:hidden}
+    th,td{padding:.7rem 1rem;text-align:left;border-bottom:1px solid #21262d;font-size:.85rem}
+    th{color:#8b949e;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;background:#0d1117}
+    tr.idle-row td{color:#388bfd}
+    tr:last-child td{border-bottom:none}
+    @media(max-width:640px){.charts{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <h1>Benchmark: Tome v1.3.2 - 10K books</h1>
+  <div class="meta">
+    Container: <code>tome_loadtest</code> &nbsp;|&nbsp;
+    2026-06-09 14:12:42 &nbsp;|&nbsp;
+    64 samples @ 5.0s &nbsp;|&nbsp;
+    Books: <strong>10K</strong>
+  </div>
+  <div class="cards">
+    <div class="card"><div class="lbl">Books Ingested</div><div class="val">10K</div><div class="sub">library size for this run</div></div>
+    <div class="card"><div class="lbl">Ingestion Time</div><div class="val">04:28</div><div class="sub">first sample to idle</div></div>
+    <div class="card"><div class="lbl">CPU Peak</div><div class="val">89.5%</div><div class="sub">avg 40.5% &nbsp; min 0.1%</div></div>
+    <div class="card"><div class="lbl">RAM Peak</div><div class="val">216.4 MB</div><div class="sub">avg 186.3 MB &nbsp; min 78.7 MB</div></div>
+    <div class="card"><div class="lbl">Peak PIDs</div><div class="val">14</div><div class="sub">max threads/processes</div></div>
+    <div class="card idle"><div class="lbl">Idle CPU (avg)</div><div class="val idle">0.2%</div><div class="sub">avg over 125s post-ingestion</div></div>
+    <div class="card idle"><div class="lbl">Idle RAM (avg)</div><div class="val idle">189.5 MB</div><div class="sub">avg over 125s post-ingestion</div></div>
+  </div>
+
+  <div class="charts">
+    <div class="cb"><h3>CPU Usage (%)</h3><canvas id="c1"></canvas></div>
+    <div class="cb"><h3>RAM Usage (MB)</h3><canvas id="c2"></canvas></div>
+    <div class="cb"><h3>Process / Thread Count (PIDs)</h3><canvas id="c3"></canvas></div>
+  </div>
+
+  <table>
+    <thead><tr><th>Metric</th><th>Min</th><th>Max</th><th>Avg</th></tr></thead>
+    <tbody>
+      <tr><td>CPU %</td><td>0.1%</td><td>89.5%</td><td>40.5%</td></tr>
+      <tr><td>RAM</td><td>78.7 MB</td><td>216.4 MB</td><td>186.3 MB</td></tr>
+      <tr><td>PIDs</td><td colspan="2"></td><td>14 peak</td></tr>
+      <tr class="idle-row"><td>Idle CPU (avg post-ingest)</td><td colspan="3">0.2%</td></tr>
+      <tr class="idle-row"><td>Idle RAM (avg post-ingest)</td><td colspan="3">189.5 MB</td></tr>
+      <tr class="idle-row"><td>Idle PIDs (avg post-ingest)</td><td colspan="3">7</td></tr>
+      <tr><td>Ingestion duration</td><td colspan="3"><strong>04:28</strong></td></tr>
+      <tr><td>Total recording</td><td colspan="3">06:33</td></tr>
+    </tbody>
+  </table>
+
+  <script>
+    const labels = ["14:06:08", "14:06:14", "14:06:20", "14:06:26", "14:06:33", "14:06:39", "14:06:45", "14:06:51", "14:06:57", "14:07:04", "14:07:10", "14:07:16", "14:07:23", "14:07:29", "14:07:35", "14:07:41", "14:07:47", "14:07:54", "14:08:00", "14:08:06", "14:08:13", "14:08:19", "14:08:25", "14:08:31", "14:08:37", "14:08:44", "14:08:50", "14:08:56", "14:09:03", "14:09:09", "14:09:15", "14:09:21", "14:09:27", "14:09:34", "14:09:40", "14:09:46", "14:09:53", "14:09:59", "14:10:05", "14:10:11", "14:10:17", "14:10:24", "14:10:30", "14:10:36", "14:10:43", "14:10:49", "14:10:55", "14:11:02", "14:11:08", "14:11:14", "14:11:20", "14:11:26", "14:11:33", "14:11:39", "14:11:45", "14:11:51", "14:11:57", "14:12:04", "14:12:10", "14:12:16", "14:12:23", "14:12:29", "14:12:35", "14:12:41"];
+    const annot  = {type:'line',xMin:43,xMax:43,borderColor:'rgba(248,113,113,0.9)',borderWidth:2,borderDash:[6,3],label:{display:true,content:'Ingestion complete',position:'start',color:'#f87171',backgroundColor:'rgba(13,17,23,0.85)',padding:4,font:{size:11}}};
+    const annotations = annot ? { ingestionEnd: annot } : {};
+    const sharedOpts = {
+      responsive:true, maintainAspectRatio:true, animation:false,
+      plugins:{ legend:{display:false}, annotation:{annotations} },
+      scales:{
+        x:{ ticks:{color:'#6e7681',maxTicksLimit:8,font:{size:11}}, grid:{color:'#21262d'} },
+        y:{ ticks:{color:'#6e7681',font:{size:11}}, grid:{color:'#21262d'} }
+      }
+    };
+    function mkChart(id, data, color) {
+      return new Chart(document.getElementById(id), {
+        type: 'line',
+        data: { labels, datasets:[{ data, borderColor:color,
+          backgroundColor:color+'1a', fill:true, tension:0.3,
+          pointRadius:0, borderWidth:1.5 }] },
+        options: sharedOpts
+      });
+    }
+    mkChart('c1', [0.22, 0.23, 3.95, 62.33, 84.91, 85.29, 87.58, 84.28, 87.03, 86.32, 83.5, 88.21, 89.48, 88.9, 87.14, 84.31, 87.04, 85.39, 87.85, 87.3, 87.74, 89.07, 87.12, 84.94, 87.43, 85.97, 84.52, 88.47, 88.6, 86.38, 87.91, 87.14, 87.39, 0.21, 0.26, 0.23, 0.27, 0.2, 0.18, 0.18, 0.36, 0.24, 0.22, 0.25, 0.27, 0.23, 0.25, 0.14, 0.22, 0.23, 0.2, 0.22, 0.23, 0.24, 0.27, 0.24, 0.17, 0.3, 0.16, 0.22, 0.28, 0.3, 0.29, 0.19], '#58a6ff');
+    mkChart('c2', [78.65, 83.41, 86.9, 139.8, 146.1, 151.2, 185.2, 188.6, 188.9, 188.8, 188.3, 188.7, 188.3, 188.1, 188.9, 187.7, 188.4, 188.6, 188.5, 195.9, 195.8, 194.7, 216.4, 216.0, 215.6, 216.0, 216.1, 206.9, 207.0, 207.8, 213.9, 214.2, 214.6, 187.4, 187.3, 187.5, 187.5, 187.5, 187.5, 187.5, 189.5, 189.8, 189.8, 191.1, 187.7, 187.7, 189.3, 189.3, 189.4, 189.7, 190.0, 189.7, 189.7, 189.7, 189.5, 189.5, 189.5, 189.5, 189.5, 189.8, 189.7, 189.7, 189.7, 189.7], '#a371f7');
+    mkChart('c3', [8, 12, 12, 12, 12, 12, 13, 13, 13, 13, 13, 7, 7, 7, 7, 7, 9, 9, 9, 12, 12, 12, 14, 14, 14, 14, 14, 7, 7, 7, 12, 12, 12, 6, 6, 6, 6, 6, 6, 6, 8, 8, 8, 8, 6, 6, 6, 6, 6, 8, 8, 8, 8, 8, 6, 6, 6, 6, 6, 8, 8, 8, 8, 8], '#3fb950');
+  </script>
+</body>
+</html>

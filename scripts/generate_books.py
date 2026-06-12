@@ -18,6 +18,7 @@ import sys
 import time
 import zipfile
 import random
+import argparse
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import multiprocessing
@@ -181,28 +182,30 @@ def count_label(n: int) -> str:
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python3 generate_books.py <count>")
-        print("Example: python3 generate_books.py 10000")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="Generate N minimal valid EPUB 2.0 files for load testing.")
+    parser.add_argument("count", type=int, help="Number of books to generate")
+    parser.add_argument("--start-idx", type=int, default=0, help="Starting index for books")
+    parser.add_argument("--out-dir", type=str, default=None, help="Output directory path")
+    parser.add_argument("--yes", "-y", action="store_true", help="Skip overwrite confirmation")
+    args = parser.parse_args()
 
-    try:
-        count = int(sys.argv[1])
-    except ValueError:
-        print(f"Error: count must be an integer, got: {sys.argv[1]!r}")
-        sys.exit(1)
+    count = args.count
+    start_idx = args.start_idx
 
     if count <= 0:
         print("Error: count must be greater than 0")
         sys.exit(1)
 
     label = count_label(count)
-    repo_root = Path(__file__).parent.parent
-    out_dir = repo_root / "books" / f"books_{label}"
+    if args.out_dir:
+        out_dir = Path(args.out_dir)
+    else:
+        repo_root = Path(__file__).parent.parent
+        out_dir = repo_root / "books" / f"books_{label}"
 
     if out_dir.exists():
         existing = sum(1 for _ in out_dir.rglob("*.epub"))
-        if existing > 0:
+        if existing > 0 and not args.yes:
             print(f"Directory already exists with {existing:,} EPUBs: {out_dir}")
             answer = input("Overwrite? [y/N] ").strip().lower()
             if answer != "y":
@@ -213,8 +216,8 @@ def main():
 
     base_seed = 42
     batches = [
-        (i, min(i + BATCH_SIZE, count), base_seed, str(out_dir))
-        for i in range(0, count, BATCH_SIZE)
+        (i, min(i + BATCH_SIZE, start_idx + count), base_seed, str(out_dir))
+        for i in range(start_idx, start_idx + count, BATCH_SIZE)
     ]
 
     print(f"Generating {count:,} EPUBs -> {out_dir}")

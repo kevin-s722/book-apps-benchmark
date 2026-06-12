@@ -63,12 +63,14 @@ TAB_NOTES: dict[str, str] = {
 
 # Stable color palette per app (matched by lowercase app-name prefix)
 APP_COLOR_MAP = {
+    "audiobookshelf": "#f472b6",
     "bookorbit": "#58a6ff",
     "calibre": "#bc8cff",
     "grimmory": "#3fb950",
     "kavita": "#f0883e",
     "komga": "#d29922",
     "stump": "#f85149",
+    "tome": "#8b5cf6",
 }
 FALLBACK_COLORS = ["#79c0ff", "#56d364", "#e3b341", "#ff7b72", "#d2a8ff", "#ffa657", "#8b949e"]
 
@@ -532,10 +534,10 @@ def build_tab_content(book_count: str, runs: list[dict]) -> tuple[str, str]:
 
     # Static bar specs (non-RAM)
     bar_specs_static = [
-        (f"bar-ingestion-{bc}", "Ingestion Time (minutes)", bar_ds("ingestion_sec", lambda v: round(v / 60, 1))),
-        (f"bar-cpu-peak-{bc}", "CPU Peak (%)", bar_ds("cpu_peak_pct")),
-        (f"bar-cpu-avg-{bc}", "CPU Avg (%)", bar_ds("cpu_avg_pct")),
-        (f"bar-idle-cpu-{bc}", "Idle CPU Avg (%)", bar_ds("idle_cpu_pct")),
+        (f"bar-ingestion-{bc}", "Ingestion Time (minutes) (lower is better)", bar_ds("ingestion_sec", lambda v: round(v / 60, 1))),
+        (f"bar-cpu-peak-{bc}", "CPU Peak (%) (lower is better)", bar_ds("cpu_peak_pct")),
+        (f"bar-cpu-avg-{bc}", "CPU Avg (%) (lower is better)", bar_ds("cpu_avg_pct")),
+        (f"bar-idle-cpu-{bc}", "Idle CPU Avg (%) (lower is better)", bar_ds("idle_cpu_pct")),
     ]
     # RAM Peak bar - two versions for toggle
     ram_bar_id = f"bar-ram-peak-{bc}"
@@ -549,8 +551,8 @@ def build_tab_content(book_count: str, runs: list[dict]) -> tuple[str, str]:
     # Order: Ingestion, RAM Peak, Idle RAM, CPU Peak, CPU Avg, Idle CPU
     bar_html_parts = [
         f'<div class="cb"><h3>{bar_specs_static[0][1]}</h3><canvas id="{bar_specs_static[0][0]}"></canvas></div>\n',
-        f'<div class="cb"><h3 id="h3-{ram_bar_id}">RAM Peak - App + DB (GB)</h3><canvas id="{ram_bar_id}"></canvas></div>\n',
-        f'<div class="cb"><h3 id="h3-{idle_ram_bar_id}">Idle RAM Avg - App + DB (GB)</h3><canvas id="{idle_ram_bar_id}"></canvas></div>\n',
+        f'<div class="cb"><h3 id="h3-{ram_bar_id}">RAM Peak - App + DB (GB) (lower is better)</h3><canvas id="{ram_bar_id}"></canvas></div>\n',
+        f'<div class="cb"><h3 id="h3-{idle_ram_bar_id}">Idle RAM Avg - App + DB (GB) (lower is better)</h3><canvas id="{idle_ram_bar_id}"></canvas></div>\n',
     ]
     bar_html_parts += [f'<div class="cb"><h3>{title}</h3><canvas id="{cid}"></canvas></div>\n'
                        for cid, title, _ in bar_specs_static[1:]]
@@ -579,8 +581,8 @@ def build_tab_content(book_count: str, runs: list[dict]) -> tuple[str, str]:
 
     # Static line specs (non-RAM)
     line_specs_static = [
-        (f"line-cpu-{bc}", "CPU Usage (%)", "cpu_pct"),
-        (f"line-pids-{bc}", "Process / Thread Count (PIDs)", "pids"),
+        (f"line-cpu-{bc}", "CPU Usage (%) (lower is better)", "cpu_pct"),
+        (f"line-pids-{bc}", "Process / Thread Count (PIDs) (lower is better)", "pids"),
     ]
     # RAM line - two versions for toggle
     ram_line_id = f"line-ram-{bc}"
@@ -588,7 +590,7 @@ def build_tab_content(book_count: str, runs: list[dict]) -> tuple[str, str]:
     line_ds_ram_total = line_ds("total_mem_mb")
 
     line_html_parts = [
-        f'<div class="cb wide"><h3 id="h3-{ram_line_id}">RAM Usage - App + DB (MB)</h3><canvas id="{ram_line_id}"></canvas></div>\n'
+        f'<div class="cb wide"><h3 id="h3-{ram_line_id}">RAM Usage - App + DB (MB) (lower is better)</h3><canvas id="{ram_line_id}"></canvas></div>\n'
     ]
     line_html_parts += [f'<div class="cb wide"><h3>{title}</h3><canvas id="{cid}"></canvas></div>\n'
                         for cid, title, _ in line_specs_static]
@@ -660,7 +662,7 @@ def build_html(tabs: dict[str, list[dict]], chartjs_src: str) -> str:
 
     all_tab_html = "\n".join(all_tab_html_parts)
     init_fns_obj = ",\n    ".join(all_init_fn_parts)
-    first_tab = tab_keys[0]
+    first_tab = "100K" if "100K" in tab_keys else (tab_keys[0] if tab_keys else "")
 
     # ---- RAM growth charts (cross-tab) ----
     # Collect all apps (preserving first-seen order) and their colors
@@ -751,7 +753,7 @@ def build_html(tabs: dict[str, list[dict]], chartjs_src: str) -> str:
     th.sortable:hover{{color:#e6edf3;background:#1c2128}}
     th.sort-asc::after{{content:" \\2191";color:#58a6ff}}
     th.sort-desc::after{{content:" \\2193";color:#58a6ff}}
-    .bar-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.25rem;margin-bottom:2rem}}
+    .bar-grid{{display:grid;grid-template-columns:repeat(3, 1fr);gap:1.25rem;margin-bottom:2rem}}
     .line-grid{{display:grid;grid-template-columns:1fr;gap:1.25rem;margin-bottom:2rem}}
     .growth-section{{margin-bottom:2.5rem}}
     .growth-grid{{display:grid;grid-template-columns:repeat(2,1fr);gap:1.25rem;margin-bottom:2rem}}
@@ -771,7 +773,7 @@ def build_html(tabs: dict[str, list[dict]], chartjs_src: str) -> str:
   </div>
 
   <label class="db-toggle-wrap" for="include-db-ram">
-    <input type="checkbox" id="include-db-ram" checked onchange="setDbRam(this.checked)">
+    <input type="checkbox" id="include-db-ram" onchange="setDbRam(this.checked)">
     <div class="db-toggle-body">
      <span class="db-toggle-title">Include Database RAM in memory figures</span>
      <span class="db-toggle-hint">Grimmory (MariaDB) and Bookorbit (PostgreSQL) run external databases whose RAM is tracked separately and added to app RAM above.
@@ -784,11 +786,11 @@ def build_html(tabs: dict[str, list[dict]], chartjs_src: str) -> str:
     <h2>RAM by Library Size</h2>
     <div class="growth-grid">
       <div class="cb wide">
-        <h3 id="h3-growth-peak">RAM Peak - App + DB (GB)</h3>
+        <h3 id="h3-growth-peak">RAM Peak - App + DB (GB) (lower is better)</h3>
         <canvas id="growth-peak"></canvas>
       </div>
       <div class="cb wide">
-        <h3 id="h3-growth-idle">Idle RAM - App + DB (GB)</h3>
+        <h3 id="h3-growth-idle">Idle RAM - App + DB (GB) (lower is better)</h3>
         <canvas id="growth-idle"></canvas>
       </div>
     </div>
@@ -896,21 +898,21 @@ def build_html(tabs: dict[str, list[dict]], chartjs_src: str) -> str:
      barChart.update();
     }}
     var barTitleEl = document.getElementById('h3-bar-ram-peak-' + bc);
-    if (barTitleEl) barTitleEl.textContent = include ? 'RAM Peak - App + DB (GB)' : 'RAM Peak - App only (GB)';
+    if (barTitleEl) barTitleEl.textContent = include ? 'RAM Peak - App + DB (GB) (lower is better)' : 'RAM Peak - App only (GB) (lower is better)';
     var idleBarChart = chartRegistry['bar-idle-ram-' + bc];
     if (idleBarChart && idleRamBarDs[bc]) {{
      idleBarChart.data.datasets = include ? idleRamBarDs[bc].total : idleRamBarDs[bc].app;
      idleBarChart.update();
     }}
     var idleBarTitleEl = document.getElementById('h3-bar-idle-ram-' + bc);
-    if (idleBarTitleEl) idleBarTitleEl.textContent = include ? 'Idle RAM Avg - App + DB (GB)' : 'Idle RAM Avg - App only (GB)';
+    if (idleBarTitleEl) idleBarTitleEl.textContent = include ? 'Idle RAM Avg - App + DB (GB) (lower is better)' : 'Idle RAM Avg - App only (GB) (lower is better)';
     var lineChart = chartRegistry['line-ram-' + bc];
     if (lineChart && ramLineDs[bc]) {{
      lineChart.data.datasets = include ? ramLineDs[bc].total : ramLineDs[bc].app;
      lineChart.update();
     }}
     var lineTitleEl = document.getElementById('h3-line-ram-' + bc);
-    if (lineTitleEl) lineTitleEl.textContent = include ? 'RAM Usage - App + DB (MB)' : 'RAM Usage - App only (MB)';
+    if (lineTitleEl) lineTitleEl.textContent = include ? 'RAM Usage - App + DB (MB) (lower is better)' : 'RAM Usage - App only (MB) (lower is better)';
   }}
 
   window.setDbRam = function(include) {{
@@ -943,7 +945,7 @@ def build_html(tabs: dict[str, list[dict]], chartjs_src: str) -> str:
       gPeak.update();
     }}
     var gPeakTitle = document.getElementById('h3-growth-peak');
-    if (gPeakTitle) gPeakTitle.textContent = include ? 'RAM Peak - App + DB (GB)' : 'RAM Peak - App only (GB)';
+    if (gPeakTitle) gPeakTitle.textContent = include ? 'RAM Peak - App + DB (GB) (lower is better)' : 'RAM Peak - App only (GB) (lower is better)';
 
     var gIdle = chartRegistry['growth-idle'];
     if (gIdle) {{
@@ -951,7 +953,7 @@ def build_html(tabs: dict[str, list[dict]], chartjs_src: str) -> str:
       gIdle.update();
     }}
     var gIdleTitle = document.getElementById('h3-growth-idle');
-    if (gIdleTitle) gIdleTitle.textContent = include ? 'Idle RAM - App + DB (GB)' : 'Idle RAM - App only (GB)';
+    if (gIdleTitle) gIdleTitle.textContent = include ? 'Idle RAM - App + DB (GB) (lower is better)' : 'Idle RAM - App only (GB) (lower is better)';
   }};
 
   const tabInits = {{

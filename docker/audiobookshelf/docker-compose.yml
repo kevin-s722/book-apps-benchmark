@@ -1,0 +1,13 @@
+services:
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:2.35.1
+    container_name: audiobookshelf_loadtest
+    restart: unless-stopped
+    ports:
+      - "6066:80"
+    volumes:
+      - ./config:/config
+      - ./metadata:/metadata
+      - ../../books:/audiobooks:ro
+    environment:
+      - TZ=Etc/UTC
